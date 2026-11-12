@@ -2,6 +2,12 @@
 
 <img src="design/media/lump-dance.gif" alt="Lump, an orange blob with a curly cowlick, dancing in sunglasses under a disco ball inside the glass cube display" width="240" align="right">
 
+> **This fork: the BBFYB pug.** Lump's poses, moods and tap gags are drawn as the Best Bang For Your Bud
+> pug in a hoodie (`const PUG = true` in `design/lump.html`; set it to `false` for Lump). His body outline
+> becomes the hoodie, which carries the usage and meeting colours; a pug head goes where his face is. The
+> style study with the palette notes is `design/pug.html`, and `design/lump.html#sheet` shows every drawing
+> (`#sheet=gag:wolf` for one gag).
+
 Lump is a little blob who lives in a tiny glass prism display on your desk and shows
 you what your Claude sessions are up to, so you can look away from the screen while Claude works.
 
