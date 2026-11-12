@@ -351,6 +351,85 @@ class DeviceLinks(unittest.TestCase):
         self.assertEqual(len(logs.output), 2)
 
 
+def ics(*events):
+    """A tiny iCal feed. Each event: (uid, start "YYYYMMDDTHHMMSSZ", title, extra lines)."""
+    body = "".join(f"BEGIN:VEVENT\r\nUID:{u}\r\nDTSTART:{st}\r\nDURATION:PT30M\r\nSUMMARY:{t}\r\n{x}END:VEVENT\r\n"
+                   for u, st, t, x in events)
+    return f"BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:test\r\n{body}END:VCALENDAR\r\n".encode()
+
+
+REAL_FETCH = bridge.Calendar._fetch
+
+
+class CalendarTest(unittest.TestCase):
+    """config.json "calendar_ics" may be one link or several (Google + Outlook); they're merged."""
+
+    def setUp(self):
+        try:
+            import icalendar, recurring_ical_events  # noqa: F401
+        except ImportError:
+            self.skipTest("needs icalendar + recurring-ical-events (the bridge venv has them)")
+        import datetime
+        soon = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=2)
+        self.t1 = soon.strftime("%Y%m%dT%H0000Z")
+        self.t2 = (soon + datetime.timedelta(hours=1)).strftime("%Y%m%dT%H0000Z")
+        self.feeds = {}
+        p = mock.patch.object(bridge.Calendar, "_fetch", staticmethod(lambda url: self.feeds[url]))
+        p.start(); self.addCleanup(p.stop)
+        self.cal = bridge.Calendar.__new__(bridge.Calendar)    # no polling thread
+        self.addCleanup(lambda: [os.path.exists(f) and os.remove(f) for f in (bridge.CONFIG_FILE, bridge.MEETINGS_FILE)])
+
+    def config(self, cfg):
+        with open(bridge.CONFIG_FILE, "w") as f: json.dump(cfg, f)
+
+    def meetings(self):
+        with open(bridge.MEETINGS_FILE) as f: return json.load(f)
+
+    def test_single_link_still_works(self):
+        self.feeds["https://g/a.ics"] = ics(("a", self.t1, "Standup", ""))
+        self.config({"calendar_ics": "https://g/a.ics"})
+        self.cal.refresh()
+        self.assertEqual([m["title"] for m in self.meetings()], ["Standup"])
+
+    def test_google_and_outlook_are_merged_and_deduped(self):
+        self.feeds["https://google/a.ics"] = ics(("a", self.t2, "Client call", ""), ("b", self.t1, "Standup", ""))
+        self.feeds["https://outlook/b.ics"] = ics(("x", self.t1, "standup ", ""), ("y", self.t2, "1:1", ""))
+        self.config({"calendar_ics": ["https://google/a.ics", "https://outlook/b.ics"]})
+        self.cal.refresh()
+        ms = self.meetings()
+        self.assertEqual(len(ms), 3)                            # the shared standup counts once
+        self.assertEqual(ms[0]["title"], "Standup")
+        self.assertEqual(sorted(m["title"] for m in ms[1:]), ["1:1", "Client call"])
+
+    def test_one_failing_calendar_does_not_hide_the_others(self):
+        self.feeds["https://google/a.ics"] = ics(("a", self.t1, "Standup", ""))
+        self.config({"calendar_ics": ["https://broken/x.ics", "https://google/a.ics"]})
+        with self.assertLogs("bridge", "INFO") as logs:
+            self.cal.refresh()
+        self.assertEqual([m["title"] for m in self.meetings()], ["Standup"])
+        self.assertTrue(any("broken failed" in l for l in logs.output))
+        self.assertFalse(any("x.ics" in l for l in logs.output))   # the secret link isn't logged
+
+    def test_all_failing_keeps_the_last_good_list(self):
+        with open(bridge.MEETINGS_FILE, "w") as f: json.dump([{"start": 1, "end": 2, "title": "old"}], f)
+        self.config({"calendar_ics": ["https://broken/x.ics"]})
+        self.cal.refresh()
+        self.assertEqual(self.meetings()[0]["title"], "old")
+
+    def test_declined_on_any_of_my_addresses_is_skipped(self):
+        dec = "ATTENDEE;PARTSTAT=DECLINED:mailto:me@work.com\r\n"
+        self.feeds["https://outlook/b.ics"] = ics(("a", self.t1, "Skip me", dec), ("b", self.t2, "Keep", ""))
+        self.config({"calendar_ics": ["https://outlook/b.ics"], "my_email": ["me@gmail.com", "Me@Work.com"]})
+        self.cal.refresh()
+        self.assertEqual([m["title"] for m in self.meetings()], ["Keep"])
+
+    def test_webcal_links_are_fetched_over_https(self):
+        seen = []
+        with mock.patch("urllib.request.urlopen", side_effect=lambda u, timeout: seen.append(u) or mock.Mock(read=lambda: b"")):
+            REAL_FETCH("webcal://outlook.office365.com/owa/calendar/x/calendar.ics")
+        self.assertEqual(seen, ["https://outlook.office365.com/owa/calendar/x/calendar.ics"])
+
+
 class GagSoundTest(unittest.TestCase):
     """The board says "gag tap_<gag>_<mood>" when a gag starts; the bridge plays tap_<gag>.wav in step."""
 
