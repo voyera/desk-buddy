@@ -85,7 +85,7 @@ MEETING_LEAD = 10 * 60
 MEETING_ALERT_SECS = 45
 MEETING_HOLD = 5 * 60
 MEETINGS_FILE = os.path.join(HOME, "meetings.json")
-CONFIG_FILE = os.path.join(HOME, "config.json")    # {"calendar_ics": "<private iCal link>", "my_email": "..."}
+CONFIG_FILE = os.path.join(HOME, "config.json")    # {"calendar_ics": "<link>" or ["<link>", ...], "my_email": "..." or [...]}
 CALENDAR_EVERY = 5 * 60
 # Sounds: see class Sounds. At night (NIGHT_START..NIGHT_END) he only makes noise if you've been
 # active in the last NIGHT_AWAKE seconds, so a background job finishing at 2am stays silent.
@@ -255,11 +255,13 @@ class Device:
 
 
 class Calendar:
-    """Polls your Google Calendar's private iCal link (config.json "calendar_ics") every 5 minutes
+    """Polls your calendars' private iCal links (config.json "calendar_ics": one link or a list,
+    e.g. Google's "Secret address in iCal format" and Outlook's published ICS link) every 5 minutes
     and writes the next day and a half of timed meetings to meetings.json, which drives the
-    teal countdown and the "meeting time" animation. Recurring meetings are expanded properly;
-    all-day events, cancelled events, events marked "free", and (if "my_email" is set)
-    meetings you've declined are skipped. Nothing leaves your Mac except the fetch itself."""
+    blue countdown and the "meeting time" animation. Recurring meetings are expanded properly;
+    all-day events, cancelled events, events marked "free", and (if "my_email" is set, one address
+    or a list) meetings you've declined are skipped. The same meeting on two calendars counts once,
+    and one calendar failing doesn't hide the others. Nothing leaves your Mac except the fetches."""
 
     def __init__(self):
         self.wake = threading.Event()
@@ -277,20 +279,61 @@ class Calendar:
             self.wake.wait(CALENDAR_EVERY)        # or sooner if someone asks (POST /calendar)
             self.wake.clear()
 
+    @staticmethod
+    def _list(v):
+        """A config value that may be one string or a list of them -> clean list."""
+        v = v if isinstance(v, list) else [v]
+        return [str(x).strip() for x in v if x and str(x).strip()]
+
+    @staticmethod
+    def _fetch(url):
+        import urllib.request
+        if url.startswith("webcal://"):                    # Outlook and Apple hand these out
+            url = "https://" + url[len("webcal://"):]
+        return urllib.request.urlopen(url, timeout=20).read()
+
+    @staticmethod
+    def _host(url):
+        from urllib.parse import urlparse
+        return urlparse(url).hostname or "?"               # never log the secret path
+
     def refresh(self):
         try:
             cfg = json.load(open(CONFIG_FILE))
         except Exception:
             return
-        url = (cfg.get("calendar_ics") or "").strip()
-        if not url:
+        urls = self._list(cfg.get("calendar_ics"))
+        if not urls:
             return
-        import datetime, urllib.request
-        import icalendar, recurring_ical_events
-        data = urllib.request.urlopen(url, timeout=20).read()
-        cal = icalendar.Calendar.from_ical(data)
+        import datetime
         now = datetime.datetime.now(datetime.timezone.utc)
-        me = (cfg.get("my_email") or "").strip().lower()
+        mes = [m.lower() for m in self._list(cfg.get("my_email"))]
+        out, ok = [], 0
+        for url in urls:
+            try:
+                out += self.meetings(self._fetch(url), now, mes)
+                ok += 1
+            except Exception as e:
+                log.info("calendar %s failed: %s", self._host(url), str(e).replace(url, "<link>").replace(url.split("://", 1)[-1], "<link>"))
+        if not ok:
+            return                                         # keep the last good meetings.json
+        seen, merged = set(), []
+        for m in sorted(out, key=lambda m: (m["start"], m["title"])):
+            key = (m["start"], m["title"].strip().lower())
+            if key not in seen:
+                seen.add(key); merged.append(m)
+        tmp = MEETINGS_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(merged, f)
+        os.replace(tmp, MEETINGS_FILE)
+        log.info("calendar: %d upcoming meetings from %d/%d calendars", len(merged), ok, len(urls))
+
+    @staticmethod
+    def meetings(data, now, mes=()):
+        """The timed, not-declined meetings in one iCal feed from an hour ago to 36 h ahead."""
+        import datetime
+        import icalendar, recurring_ical_events
+        cal = icalendar.Calendar.from_ical(data)
         out = []
         for e in recurring_ical_events.of(cal).between(now - datetime.timedelta(hours=1), now + datetime.timedelta(hours=36)):
             st = e.get("DTSTART").dt
@@ -298,21 +341,17 @@ class Calendar:
                 continue                                   # all-day
             if str(e.get("STATUS", "")).upper() == "CANCELLED" or str(e.get("TRANSP", "")).upper() == "TRANSPARENT":
                 continue
-            if me:
+            if mes:
                 atts = e.get("ATTENDEE") or []
                 atts = atts if isinstance(atts, list) else [atts]
-                if any(me in str(a).lower() and str(a.params.get("PARTSTAT", "")).upper() == "DECLINED" for a in atts):
+                if any(str(a).lower().endswith(me) and str(a.params.get("PARTSTAT", "")).upper() == "DECLINED"
+                       for a in atts for me in mes):
                     continue
             en = e.get("DTEND").dt if e.get("DTEND") else st + datetime.timedelta(minutes=30)
             if st.tzinfo is None: st = st.astimezone()
             if en.tzinfo is None: en = en.astimezone()
             out.append({"start": st.timestamp(), "end": en.timestamp(), "title": str(e.get("SUMMARY", ""))[:80]})
-        out.sort(key=lambda m: m["start"])
-        tmp = MEETINGS_FILE + ".tmp"
-        with open(tmp, "w") as f:
-            json.dump(out, f)
-        os.replace(tmp, MEETINGS_FILE)
-        log.info("calendar: %d upcoming meetings", len(out))
+        return out
 
 
 # ---- Claude accounts ----

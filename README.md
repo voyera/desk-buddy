@@ -95,8 +95,8 @@ Put these in `~/.desk-buddy/config.json`. The bridge re-reads it, so no restart 
 
 | Key | What it does |
 |---|---|
-| `calendar_ics` | Your calendar's private iCal link. He fades to blue over the 10 minutes before a meeting and plays a "meeting time" alert. |
-| `my_email` | With `calendar_ics`: skip meetings you've declined. |
+| `calendar_ics` | Your calendar's private iCal link, or a list of them to combine calendars: Google (Settings › your calendar › *Secret address in iCal format*) and Outlook (Settings › Calendar › Shared calendars › *Publish a calendar* › ICS link; `webcal://` links work). The same meeting on two calendars counts once. He fades to blue over the 10 minutes before a meeting and plays a "meeting time" alert. |
+| `my_email` | With `calendar_ics`: skip meetings you've declined. One address or a list (e.g. your Google and Outlook addresses). |
 | `slack_token` | A Slack **user** token (`xoxp-…`) from your own private Slack app with read-only scopes `im:read im:history mpim:read mpim:history users:read search:read`. DMs and @-mentions send a paper plane round him. The token is never logged. |
 | `slack_vips` | Names as Slack shows them. An unread DM from one of them makes him hold up a letter until you've read it. |
 
