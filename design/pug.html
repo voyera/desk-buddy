@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pug Style Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* A style study for the BBFYB pug: five key poses drawn the same way lump.html draws Lump
+   (points traced into curves, a cream line on black), with the device's colour trick simulated. */
+:root {
+  --bg: #090C12;
+  --surface: #11161F;
+  --surface-2: #171E2B;
+  --line: #222B3B;
+  --fg: #E7ECF4;
+  --muted: #8C97AB;
+  --accent: #FFB547;
+  --paper: #F4EFE6;
+  --font-display: "Fredoka", "Avenir Next Rounded", "Nunito", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 16px 64px; display: flex; flex-direction: column; gap: 28px; }
+header { display: flex; flex-direction: column; gap: 10px; max-width: 72ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(32px, 6vw, 50px); line-height: 1.04; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 20px; margin: 0; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; }
+.lede strong { color: var(--fg); font-weight: 500; }
+
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.ctl { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ctl > span { font: 500 12px/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.ctl output { color: var(--fg); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; width: max-content; max-width: 100%; }
+.seg button { font: 500 13px/1 var(--font-body); color: var(--muted); background: var(--surface-2); border: 0; padding: 9px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #1A1206; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.stage { position: relative; border-radius: 10px; overflow: hidden; background: #000; aspect-ratio: 1; }
+body.paper .stage { background: var(--paper); }
+.stage canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.chip { position: absolute; left: 8px; top: 8px; font: 500 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 7px; border-radius: 6px; background: rgba(9, 12, 18, 0.78); color: var(--fg); border: 1px solid var(--line); }
+.stray { position: absolute; right: 8px; bottom: 8px; font: 500 11px/1 var(--font-mono); padding: 5px 7px; border-radius: 6px; background: rgba(9, 12, 18, 0.78); color: var(--muted); border: 1px solid var(--line); display: none; }
+body.sim .stray { display: block; }
+.card p { margin: 0 4px 4px; color: var(--muted); font-size: 14px; }
+.card p strong { color: var(--fg); font-weight: 500; }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.note p, .note li { margin: 0; color: var(--muted); font-size: 14px; }
+.note ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.note code { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg); }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.sw { display: flex; align-items: center; gap: 8px; font: 400 12.5px/1.2 var(--font-mono); color: var(--muted); }
+.sw i { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--line); flex: none; }
+</style>
+</head>
+<body class="glow">
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Desk buddy · style study</span>
+    <h1>The BBFYB pug, kept simple</h1>
+    <p class="lede">Five key poses in the same style the device plays: a cream line on black, flat colour, a little wobble. <strong>The hoodie carries the colour</strong>: it warms toward red as usage climbs and turns blue before a meeting, so the fur always stays fawn. Approve the look here before every pose gets redrawn.</p>
+  </header>
+
+  <section class="controls" aria-label="Controls">
+    <div class="ctl"><span id="l-mode">Lines</span>
+      <div class="seg" role="group" aria-labelledby="l-mode" id="modeSeg">
+        <button type="button" data-v="glow" aria-pressed="true">Glow (device)</button>
+        <button type="button" data-v="paper" aria-pressed="false">Paper (Mac)</button>
+      </div></div>
+    <div class="ctl"><span>Wobble <output id="wobOut">35%</output></span><input id="wob" type="range" min="0" max="100" value="35" aria-label="Line wobble"></div>
+    <div class="ctl"><span>Usage <output id="useOut">20%</output></span><input id="use" type="range" min="0" max="100" value="20" aria-label="Claude usage"></div>
+    <div class="ctl"><span>Meeting in <output id="meetOut">4 min</output></span><input id="meet" type="range" min="0" max="10" step="0.5" value="4" aria-label="Minutes until the meeting"></div>
+    <div class="ctl"><span id="l-sim">Device colour check</span>
+      <div class="seg" role="group" aria-labelledby="l-sim" id="simSeg">
+        <button type="button" data-v="off" aria-pressed="true">Off</button>
+        <button type="button" data-v="today" aria-pressed="false">Simulate the board</button>
+      </div></div>
+    <div class="ctl"><span id="l-play">Playback</span>
+      <div class="seg" role="group" aria-labelledby="l-play" id="playSeg">
+        <button type="button" data-v="play" aria-pressed="true">Play</button>
+        <button type="button" data-v="pause" aria-pressed="false">Pause</button>
+      </div></div>
+  </section>
+
+  <section class="grid" id="grid" aria-label="Poses"></section>
+
+  <section class="notes">
+    <div class="note">
+      <h2>Kept from the logo</h2>
+      <div class="swatches" id="swatches"></div>
+      <p>Left out: fur texture, wrinkle hatching, the lettering, the plants. At 240 × 240 pixels behind glass, the mask, the tongue, the blue glasses and the hoodie are what make him recognisable.</p>
+    </div>
+    <div class="note">
+      <h2>How the device colours him</h2>
+      <ul>
+        <li>Frames are baked once, with the hoodie in pure magenta. The board swaps any pixel that is a mix of magenta, cream and black for the live colour, so one set of frames covers every usage and meeting colour.</li>
+        <li>Every other colour must stay off that mix, or it gets tinted too. That's why the mask is a neutral near-black (<code>#2F2D29</code>) rather than a warm brown, and the fawn and pink are a little less blue than the logo's.</li>
+        <li><strong>Device colour check</strong> runs the board's own recolour (ported from <code>firmware/src/main.cpp</code>, in RGB565) on magenta frames and compares it with drawing the colour directly. With this palette it finds 0 stray pixels, even with the hoodie fully blue, so the firmware needs no change.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- helpers (the same curve maths as lump.html) ---------- */
+const hash = i => { const s = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return s - Math.floor(s); };
+function boil(pts, seed, amt) { return pts.map((p, i) => [p[0] + (hash(seed * 97.1 + i * 7.13) - 0.5) * amt, p[1] + (hash(seed * 31.7 + i * 3.31) - 0.5) * amt]); }
+function closedPath(c, P) {
+  const n = P.length; c.beginPath(); c.moveTo(P[0][0], P[0][1]);
+  for (let i = 0; i < n; i++) {
+    const p0 = P[(i - 1 + n) % n], p1 = P[i], p2 = P[(i + 1) % n], p3 = P[(i + 2) % n];
+    c.bezierCurveTo(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1]);
+  }
+  c.closePath();
+}
+function openPath(c, P) {
+  const n = P.length; c.beginPath(); c.moveTo(P[0][0], P[0][1]);
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(n - 1, i + 2)];
+    c.bezierCurveTo(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1]);
+  }
+}
+const mirror = P => P.map(([x, y]) => [256 - x, y]);
+const lerp = (a, b, t) => a + (b - a) * t;
+function mixHex(a, b, k) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join(''); }
+
+/* ---------- colours: the bridge's usage ramp and meeting blend, ported ---------- */
+const s2l = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+const l2s = c => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+function hexToOklch(h) {
+  const [r, g, b] = [1, 3, 5].map(i => s2l(parseInt(h.slice(i, i + 2), 16) / 255));
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  return [L, Math.hypot(A, B), (Math.atan2(B, A) * 180 / Math.PI + 360) % 360];
+}
+function oklchToHex(L, C, H) {
+  for (let k = 0; k < 40; k++, C *= 0.93) {
+    const A = C * Math.cos(H * Math.PI / 180), B = C * Math.sin(H * Math.PI / 180);
+    const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3, m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3, s = (L - 0.0894841775 * A - 1.2914855480 * B) ** 3;
+    const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s];
+    if (rgb.every(v => v >= -0.002 && v <= 1.002)) return '#' + rgb.map(v => Math.round(l2s(Math.min(1, Math.max(0, v))) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+  return '#888888';
+}
+const MEETING = '#3D8BFF';
+function meetingBlend(base, t) {
+  const [L1, C1, H1] = hexToOklch(base), [L2, C2, H2] = hexToOklch(MEETING);
+  let dh = H2 - H1; if (dh > 0) dh -= 360;
+  return oklchToHex(L1 + (L2 - L1) * t, Math.max(0.13, C1 + (C2 - C1) * t), (H1 + dh * t + 360) % 360);
+}
+const USAGE_STOPS = [[0, '#FF7A45'], [0.5, '#FF7A45'], [0.8, '#FF4B2B'], [0.97, '#C8102E'], [1, '#8F7C78']];
+function usageColour(f) {
+  for (let i = 1; i < USAGE_STOPS.length; i++) { const [f0, c0] = USAGE_STOPS[i - 1], [f1, c1] = USAGE_STOPS[i]; if (f <= f1) return mixHex(c0, c1, f1 === f0 ? 0 : (f - f0) / (f1 - f0)); }
+  return USAGE_STOPS.at(-1)[1];
+}
+
+/* ---------- palette: chosen to stay clear of the device's magenta + cream + black mix ---------- */
+const PAL = { fawn: '#D6AA7C', mask: '#2F2D29', tongue: '#F2879B', crease: '#C8566E', frame: '#3AB0E6', shorts: '#3AB0E6', laptop: '#26262A', leaf: '#5DBB46',
+              red: '#E8452C', orange: '#F7941D', yellow: '#FBC230' };
+const KEY = '#FF00FF';
+let mode = 'glow', wob = 0.35, usage = 0.2, meetMin = 4, sim = 'off', playing = true, tick = 0;
+const ink = () => mode === 'glow' ? '#FFF1DC' : '#17161A';
+const LIT = '#FFF1DC', lit = a => `rgba(255,241,220,${a})`;   // marks drawn on the dark mask or lenses: cream in both modes
+const cream = a => mode === 'glow' ? `rgba(255,241,220,${a})` : `rgba(23,22,26,${a})`;
+
+/* ---------- drawing pieces ---------- */
+function shape(c, pts, fill, seed, lw = 3.4) {
+  closedPath(c, boil(pts, seed, 2.4 * wob));
+  if (fill) { c.fillStyle = fill; c.fill(); }
+  if (lw) { c.strokeStyle = ink(); c.lineWidth = lw; c.lineJoin = 'round'; c.stroke(); }
+}
+function line(c, pts, col, lw, seed) { openPath(c, boil(pts, seed, 1.6 * wob)); c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke(); }
+function blob(c, x, y, rx, ry, fill, lw = 3) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); if (fill) { c.fillStyle = fill; c.fill(); } if (lw) { c.strokeStyle = ink(); c.lineWidth = lw; c.stroke(); } }
+function outlinedLine(c, pts, col, w, seed) { line(c, pts, ink(), w + 4, seed); line(c, pts, col, w, seed); }
+
+function tail(c, seed, x = 160, y = 180) { outlinedLine(c, [[x, y], [x + 12, y - 6], [x + 16, y - 16], [x + 8, y - 20], [x + 4, y - 12]], PAL.fawn, 5, seed + 3); }
+
+function arm(c, side, ang, hood, seed, watch) {
+  const sx = side < 0 ? 98 : 158;
+  c.save(); c.translate(sx, 156); c.rotate(side < 0 ? ang : -ang);
+  shape(c, [[-7, -2], [7, -2], [8, 20], [0, 24], [-8, 20]], hood, seed + 11, 3);
+  if (watch) { blob(c, 0, 22, 6, 3.4, ink(), 0); }
+  blob(c, 0, 27, 7, 6.5, PAL.fawn, 3);
+  c.restore();
+}
+
+function hoodieSit(c, hood, seed) {
+  shape(c, [[90, 182], [166, 182], [164, 195], [130, 195], [128, 190], [126, 195], [92, 195]], PAL.shorts, seed + 5, 3);
+  shape(c, [[100, 146], [156, 146], [165, 162], [168, 184], [128, 186], [88, 184], [91, 162]], hood, seed + 6, 3.4);
+  c.save(); closedPath(c, boil([[109, 167], [147, 167], [151, 181], [105, 181]], seed + 7, 1.6 * wob)); c.fillStyle = 'rgba(0,0,0,.28)'; c.fill(); c.strokeStyle = ink(); c.lineWidth = 2; c.stroke(); c.restore();
+  line(c, [[121, 150], [119, 161], [118, 166]], ink(), 2.4, seed + 8); line(c, [[135, 150], [137, 161], [138, 166]], ink(), 2.4, seed + 9);
+  blob(c, 118, 168, 2.2, 2.2, ink(), 0); blob(c, 138, 168, 2.2, 2.2, ink(), 0);
+}
+function feet(c, seed, y = 197) { blob(c, 110, y, 10, 6, PAL.fawn, 3); blob(c, 146, y, 10, 6, PAL.fawn, 3); }
+
+const EAR = [[98, 71], [86, 66], [72, 70], [66, 82], [72, 88], [88, 82]];
+const HEAD = [[84, 80], [104, 66], [128, 63], [152, 66], [172, 80], [182, 104], [178, 130], [162, 148], [128, 156], [94, 148], [78, 130], [74, 104]];
+const MASK = [[104, 112], [118, 108], [128, 111], [138, 108], [152, 112], [162, 125], [158, 141], [144, 150], [128, 153], [112, 150], [98, 141], [94, 125]];
+const LENS = [[92, 96], [104, 91], [116, 93], [123, 99], [122, 111], [114, 120], [102, 121], [93, 115], [89, 105]];
+
+function glasses(c, seed) {
+  line(c, [[91, 100], [78, 94]], PAL.frame, 3.4, seed + 40); line(c, [[165, 100], [178, 94]], PAL.frame, 3.4, seed + 41);
+  for (const [P, s] of [[LENS, 0], [mirror(LENS), 1]]) {
+    closedPath(c, boil(P, seed + 42 + s, 1.6 * wob)); c.fillStyle = '#000'; c.fill(); c.strokeStyle = PAL.frame; c.lineWidth = 4.2; c.stroke();
+  }
+  line(c, [[122, 100], [128, 97], [134, 100]], PAL.frame, 3.6, seed + 44);
+  for (const dx of [0, 34]) { line(c, [[98 + dx, 114], [110 + dx, 98]], LIT, 2.6, seed + 45 + dx); line(c, [[106 + dx, 116], [113 + dx, 107]], LIT, 1.8, seed + 46 + dx); }
+}
+function eye(c, x, y, kind, seed) {
+  if (kind === 'closed') { line(c, [[x - 8, y], [x, y + 5], [x + 8, y]], LIT, 2.8, seed); return; }
+  const r = kind === 'wide' ? 9 : 7.5;
+  blob(c, x, y, r, r, '#000', 0); c.strokeStyle = LIT; c.lineWidth = 2; c.stroke();
+  const off = { down: [1, 3], side: [3.5, 1] }[kind] || [2.5, -2.5];
+  blob(c, x + off[0], y + off[1], 2.4, 2.4, LIT, 0);
+  if (kind === 'wide') blob(c, x - 3, y + 3, 1.3, 1.3, LIT, 0);
+  if (kind === 'down') line(c, [[x - 8, y - 3], [x + 8, y - 4]], LIT, 2.2, seed + 1);
+}
+function head(c, o, seed) {
+  const ears = o.ears || 'fold', earRot = { fold: 0, perk: -0.65, droop: 0.32 }[ears];
+  const sideEar = (s) => { c.save(); if (s) { c.translate(256, 0); c.scale(-1, 1); } c.translate(94, 74); c.rotate(earRot); c.translate(-94, -74); shape(c, EAR, PAL.mask, seed + 20 + s, 3); line(c, [[88, 76], [76, 76], [71, 84]], lit(0.35), 1.8, seed + 22 + s); c.restore(); };
+  shape(c, HEAD, PAL.fawn, seed + 12, 3.6);
+  sideEar(0); sideEar(1);
+  line(c, [[113, 79], [121, 76], [128, 79], [135, 76], [143, 79]], mixHex(PAL.fawn, PAL.mask, 0.55), 2.2, seed + 23);
+  line(c, [[118, 86], [128, 83], [138, 86]], mixHex(PAL.fawn, PAL.mask, 0.55), 2, seed + 24);
+  closedPath(c, boil(MASK, seed + 25, 2 * wob)); c.fillStyle = PAL.mask; c.fill();
+  for (const x of [109, 147]) { closedPath(c, boil([[x - 13, 104], [x - 6, 95], [x + 6, 95], [x + 13, 104], [x + 9, 115], [x - 9, 115]], seed + 28 + x, 1.4 * wob)); c.fill(); }
+  line(c, [[110, 121], [102, 128], [104, 137]], lit(0.32), 2, seed + 26); line(c, mirror([[110, 121], [102, 128], [104, 137]]), lit(0.32), 2, seed + 27);
+  if (o.glasses === 'on') glasses(c, seed);
+  else {
+    eye(c, 109, 106, o.eyes || 'open', seed + 30); eye(c, 147, 106, o.eyes || 'open', seed + 31);
+    if (o.glasses === 'up') { c.save(); c.translate(128, 74); c.scale(0.72, 0.62); c.translate(-128, -104); glasses(c, seed); c.restore(); }
+  }
+  closedPath(c, boil([[118, 111], [138, 111], [135, 118], [128, 121], [121, 118]], seed + 32, wob)); c.fillStyle = '#000'; c.fill(); c.strokeStyle = lit(0.6); c.lineWidth = 1.6; c.stroke();
+  blob(c, 124, 113.5, 2.2, 1.4, lit(0.8), 0);
+  if (o.mouth === 'o') {
+    blob(c, 128, 133, 6, 7, '#000', 0); c.strokeStyle = LIT; c.lineWidth = 2.2; c.stroke();
+    c.save(); c.beginPath(); c.ellipse(128, 133, 5, 6, 0, 0, Math.PI * 2); c.clip(); blob(c, 128, 138, 5, 3.5, PAL.tongue, 0); c.restore();
+  } else {
+    const L = 8 + 16 * (o.tongue || 0);
+    if (o.tongue) {
+      shape(c, [[122, 128], [135, 128], [139, 128 + L * 0.65], [134, 128 + L], [127, 128 + L * 0.92], [123, 128 + L * 0.5]], PAL.tongue, seed + 33, 2.2);
+      line(c, [[130, 131], [131, 128 + L * 0.7]], PAL.crease, 1.8, seed + 34);
+    }
+    line(c, [[115, 125], [121, 130], [128, 126], [135, 130], [141, 125]], LIT, 2.4, seed + 35);
+  }
+}
+function withHead(c, o, seed, x, y, rot = 0, k = 1) { c.save(); c.translate(128 + x, 108 + y); c.rotate(rot); c.scale(k, k); c.translate(-128, -108); head(c, o, seed); c.restore(); }
+function shadow(c, rx, x = 128) { c.fillStyle = mode === 'paper' ? '#CFC8BC' : 'rgba(255,241,220,.10)'; c.beginPath(); c.ellipse(x + 4, 203, rx, 6, 0, 0, Math.PI * 2); c.fill(); }
+function zz(c, x, y, s, seed) { line(c, [[x, y], [x + s, y - 1], [x + 1, y + s], [x + s + 1, y + s]], ink(), 2.4, seed); }
+function leaf(c, x, y, k, seed) {          // a seven-leaflet cannabis leaf, base at (x, y): flat green, no outline
+  c.save(); c.translate(x, y); c.scale(k, k); c.fillStyle = PAL.leaf;
+  [[0, 22, 4.2], [-30, 19, 3.8], [30, 19, 3.8], [-62, 14, 3.2], [62, 14, 3.2], [-98, 8, 2.4], [98, 8, 2.4]].forEach(([deg, len, w], i) => {
+    const j = (hash(seed + i) - 0.5) * 2 * wob;
+    c.save(); c.rotate((deg + j * 4) * Math.PI / 180);
+    c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(w * 1.6, -len * 0.45, 0, -len); c.quadraticCurveTo(-w * 1.6, -len * 0.45, 0, 0); c.fill();
+    c.restore();
+  });
+  c.strokeStyle = PAL.leaf; c.lineWidth = 1.8; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 6); c.stroke();
+  c.restore();
+}
+function sparkle(c, x, y, s, seed) { const P = [[x, y - s], [x + s * 0.22, y - s * 0.22], [x + s, y], [x + s * 0.22, y + s * 0.22], [x, y + s], [x - s * 0.22, y + s * 0.22], [x - s, y], [x - s * 0.22, y - s * 0.22]]; closedPath(c, boil(P, seed, wob)); c.fillStyle = ink(); c.fill(); }
+
+/* ---------- the five poses ---------- */
+const POSES = [
+  { key: 'idle', label: 'Asleep', note: '<strong>Loaf pose.</strong> Ears droop, a tongue blep, slow breathing. Replaces Lump slumped on his side.',
+    draw(c, t, seed, hood) {
+      const br = Math.sin(t * Math.PI * 2 / 48);
+      shadow(c, 74);
+      tail(c, seed, 188, 192);
+      c.save(); c.translate(128, 201); c.scale(1, 1 + 0.03 * br); c.translate(-128, -201);
+      shape(c, [[56, 201], [200, 201], [198, 186], [184, 170], [158, 160], [98, 160], [72, 170], [58, 186]], hood, seed + 6, 3.4);
+      c.restore();
+      withHead(c, { ears: 'droop', eyes: 'closed', tongue: 0.12 }, seed, 0, 42 - 1.5 * br, -0.04, 0.82);
+      blob(c, 104, 197, 12, 6.5, PAL.fawn, 3); blob(c, 152, 197, 12, 6.5, PAL.fawn, 3);
+      const z = (t % 48) / 48; c.save(); c.globalAlpha = Math.sin(z * Math.PI); zz(c, 176 + z * 10, 104 - z * 26, 9, seed + 60); c.restore();
+      c.save(); c.globalAlpha = Math.sin(((z + 0.5) % 1) * Math.PI); zz(c, 190 + ((z + 0.5) % 1) * 8, 92 - ((z + 0.5) % 1) * 22, 6, seed + 61); c.restore();
+    } },
+  { key: 'working', label: 'Working', note: '<strong>Glasses pushed up, typing.</strong> A cannabis leaf on the lid instead of a fruit. Head bobs to the keys.',
+    draw(c, t, seed, hood) {
+      const bob = Math.sin(t * Math.PI * 2 / 24);
+      shadow(c, 66);
+      tail(c, seed, 166, 182);
+      shape(c, [[98, 150], [158, 150], [168, 190], [88, 190]], hood, seed + 6, 3.4);
+      withHead(c, { glasses: 'up', eyes: 'down', tongue: 0 }, seed, 0, 18 + bob, 0.03 * bob);
+      c.fillStyle = cream(mode === 'glow' ? 0.1 : 0.06); c.beginPath(); c.ellipse(128, 140, 46, 14, 0, 0, Math.PI * 2); c.fill();
+      const L = Math.max(0, Math.sin(t * Math.PI * 2 / 8)), R = Math.max(0, Math.sin(t * Math.PI * 2 / 8 + Math.PI));
+      blob(c, 102, 150 - 4 * L, 8.5, 6.5, PAL.fawn, 3); blob(c, 154, 150 - 4 * R, 8.5, 6.5, PAL.fawn, 3);
+      shape(c, [[80, 152], [128, 151], [176, 152], [178, 155], [179, 176], [180, 195], [178, 197], [128, 197], [78, 197], [76, 195], [77, 176], [78, 155]], PAL.laptop, seed + 50, 3.4);
+      line(c, [[66, 199], [190, 199]], ink(), 4, seed + 51);
+      leaf(c, 128, 186, 1, seed + 52);
+    } },
+  { key: 'alert', label: 'Needs you', note: '<strong>Ears up, hopping, waving.</strong> Same rhythm as Lump\'s crouch, launch and land.',
+    draw(c, t, seed, hood) {
+      const p = (t % 24) / 24; let dy = 0, sq = 1;
+      if (p < 0.15) sq = 1 - 0.12 * Math.sin(Math.PI * p / 0.15);
+      else if (p < 0.75) { dy = -26 * Math.sin(Math.PI * (p - 0.15) / 0.6); sq = 1.04; }
+      else if (p < 0.9) sq = 1 - 0.1 * Math.sin(Math.PI * (p - 0.75) / 0.15);
+      shadow(c, 56 + dy * 0.8);
+      c.save(); c.translate(0, dy); c.translate(128, 201); c.scale(1 + (1 - sq) * 0.6, sq); c.translate(-128, -201);
+      tail(c, seed); feet(c, seed); hoodieSit(c, hood, seed);
+      arm(c, -1, 0.35, hood, seed);
+      arm(c, 1, 2.55 + 0.35 * Math.sin(t * 0.7), hood, seed);
+      c.restore();
+      withHead(c, { ears: 'perk', eyes: 'wide', mouth: 'o' }, seed, 0, dy + 55 * (1 - sq), 0.04 * Math.sin(t * 0.7));
+      const k = 1 + 0.12 * Math.sin(t * 0.9);
+      c.save(); c.translate(200, 64); c.scale(k, k); line(c, [[0, -14], [1, 4]], ink(), 4, seed + 70); blob(c, 1, 12, 2.8, 2.8, ink(), 0); c.restore();
+    } },
+  { key: 'done', label: 'Done', note: '<strong>The logo pose.</strong> Shades on, tongue out, the sunset arch behind him while he celebrates.',
+    draw(c, t, seed, hood) {
+      [[104, PAL.red], [90, PAL.orange], [76, PAL.yellow]].forEach(([r, col]) => { c.beginPath(); c.arc(128, 203, r, Math.PI, 0); c.closePath(); c.fillStyle = col; c.globalAlpha = mode === 'glow' ? 0.8 : 1; c.fill(); c.globalAlpha = 1; });
+      c.beginPath(); c.arc(128, 203, 62, Math.PI, 0); c.closePath(); c.fillStyle = mode === 'glow' ? '#000' : '#F4EFE6'; c.fill();
+      const b = Math.abs(Math.sin(t * Math.PI / 12)), dy = -5 * b;
+      shadow(c, 58);
+      c.save(); c.translate(0, dy);
+      tail(c, seed); feet(c, seed); hoodieSit(c, hood, seed);
+      arm(c, -1, 0.75 + 0.2 * b, hood, seed); arm(c, 1, 0.75 + 0.2 * b, hood, seed);
+      c.restore();
+      withHead(c, { glasses: 'on', tongue: 1 }, seed, 0, dy, 0.05 * Math.sin(t * Math.PI / 12));
+      [[46, 60, 7], [206, 54, 8], [196, 140, 5], [58, 132, 5]].forEach(([x, y, s], i) => { const k = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.3 + i)); sparkle(c, x, y, s * k, seed + 80 + i); });
+    } },
+  { key: 'meeting', label: 'Meeting soon', note: '<strong>Checking his watch</strong> while the hoodie cools toward blue. Drag "Meeting in" to see the countdown.',
+    draw(c, t, seed, hood) {
+      const look = Math.sin(t * Math.PI * 2 / 48) > -0.3;
+      shadow(c, 58);
+      tail(c, seed); feet(c, seed); hoodieSit(c, hood, seed);
+      arm(c, 1, 0.35, hood, seed);
+      arm(c, -1, 1.95, hood, seed, true);
+      withHead(c, { eyes: look ? 'side' : 'open', tongue: 0 }, seed, 0, 2, look ? -0.06 : 0);
+      if (meetMin <= 0) { const k = 1 + 0.15 * Math.abs(Math.sin(t * 0.5)); c.save(); c.translate(204, 56); c.scale(k, k); blob(c, 0, 0, 13, 13, null, 3); line(c, [[0, 0], [0, -8]], ink(), 2.6, seed + 90); line(c, [[0, 0], [6, 3]], ink(), 2.6, seed + 91); c.restore(); }
+    } },
+];
+
+/* ---------- the device's recolour, ported from firmware/src/main.cpp (recolor) ---------- */
+function deviceRecolour(img, tintHex) {
+  const T = [1, 3, 5].map(i => parseInt(tintHex.slice(i, i + 2), 16)), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i] & 0xF8, g = d[i + 1] & 0xFC, b = d[i + 2] & 0xF8;              // RGB565, as stored
+    d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    if (r < 8 && g < 8 && b < 8) continue;
+    const beta = g / 241, alpha = r / 255 - beta;
+    if (alpha <= 0.02) continue;
+    const pred = alpha * 255 + beta * 220;
+    if (b < pred - 48) continue;                                                  // a real colour: keep it
+    d[i] = Math.min(255, alpha * T[0] + beta * 255) & 0xF8; d[i + 1] = Math.min(255, alpha * T[1] + beta * 241) & 0xFC; d[i + 2] = Math.min(255, alpha * T[2] + beta * 220) & 0xF8;
+  }
+  return img;
+}
+function strayCount(a, b) {     // pixels where the device's result differs visibly from drawing the colour directly
+  let n = 0; for (let i = 0; i < a.length; i += 4) if (Math.max(Math.abs(a[i] - (b[i] & 0xF8)), Math.abs(a[i + 1] - (b[i + 1] & 0xFC)), Math.abs(a[i + 2] - (b[i + 2] & 0xF8))) > 40) n++;
+  return n;
+}
+
+/* ---------- page ---------- */
+const grid = document.getElementById('grid');
+const off = document.createElement('canvas'); off.width = off.height = 240; const oc = off.getContext('2d', { willReadFrequently: true });
+const cards = POSES.map(p => {
+  const card = document.createElement('article'); card.className = 'card';
+  card.innerHTML = `<div class="stage"><canvas width="240" height="240" aria-label="${p.label}" role="img"></canvas><span class="chip">${p.label}</span><span class="stray"></span></div><p>${p.note}</p>`;
+  grid.appendChild(card);
+  return { p, c: card.querySelector('canvas').getContext('2d', { willReadFrequently: true }), stray: card.querySelector('.stray') };
+});
+document.getElementById('swatches').innerHTML = [['Fawn', PAL.fawn], ['Mask', PAL.mask], ['Tongue', PAL.tongue], ['Glasses', PAL.frame], ['Hoodie', '#FF7A45'], ['Sunset', PAL.orange], ['Leaf', PAL.leaf]]
+  .map(([n, v]) => `<span class="sw"><i style="background:${v}"></i>${n} ${v}</span>`).join('');
+
+function hoodFor(p) { const base = usageColour(usage); return p.key === 'meeting' ? (meetMin <= 0 ? MEETING : meetMin >= 10 ? base : meetingBlend(base, Math.round((1 - meetMin / 10) * 40) / 40)) : base; }
+function paint(c, p, hood, seed) {
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1;
+  c.fillStyle = mode === 'paper' ? '#F4EFE6' : '#000'; c.fillRect(0, 0, 240, 240);
+  p.draw(c, tick, seed, hood);
+}
+function frame(countStray) {
+  const seed = (Math.floor(tick / 2) % 3) + 1;
+  for (const k of cards) {
+    const hood = hoodFor(k.p);
+    if (sim === 'off' || mode === 'paper') { paint(k.c, k.p, hood, seed); continue; }
+    paint(oc, k.p, KEY, seed);
+    const img = deviceRecolour(oc.getImageData(0, 0, 240, 240), hood);
+    if (countStray) { paint(oc, k.p, hood, seed); k.stray.textContent = strayCount(img.data, oc.getImageData(0, 0, 240, 240).data) + ' stray px'; }
+    k.c.putImageData(img, 0, 0);
+  }
+}
+
+function bindSeg(id, set) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); set(b.dataset.v); frame(true); });
+}
+bindSeg('modeSeg', v => { mode = v; document.body.classList.toggle('paper', v === 'paper'); });
+bindSeg('simSeg', v => { sim = v; document.body.classList.toggle('sim', v !== 'off'); });
+bindSeg('playSeg', v => { playing = v === 'play'; });
+const bindRange = (id, outId, set, fmt) => { const el = document.getElementById(id), out = document.getElementById(outId); el.addEventListener('input', () => { set(+el.value); out.textContent = fmt(+el.value); frame(true); }); };
+bindRange('wob', 'wobOut', v => wob = v / 100, v => v + '%');
+bindRange('use', 'useOut', v => usage = v / 100, v => v + '%');
+bindRange('meet', 'meetOut', v => meetMin = v, v => v <= 0 ? 'now' : v + ' min');
+
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = 0, acc = 0;
+function loop(now) {
+  acc += Math.min(200, now - last); last = now;
+  if (playing && !reduced) while (acc >= 1000 / 24) { acc -= 1000 / 24; tick++; if (tick % 12 === 0 || sim === 'off') frame(tick % 12 === 0); else frame(false); }
+  else acc = 0;
+  requestAnimationFrame(loop);
+}
+// #sim=today&meet=0&use=90&mode=paper&tick=30 sets the controls (handy for screenshots)
+for (const [k, v] of new URLSearchParams(location.hash.slice(1))) {
+  if (k === 'sim' || k === 'mode') document.querySelector(`#${k}Seg button[data-v="${v}"]`)?.click();
+  if (k === 'meet' || k === 'use' || k === 'wob') { const el = document.getElementById(k); el.value = v; el.dispatchEvent(new Event('input')); }
+  if (k === 'tick') { tick = +v; playing = false; }
+}
+frame(true);
+requestAnimationFrame(t => { last = t; loop(t); });
+</script>
+</body>
+</html>

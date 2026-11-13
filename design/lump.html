@@ -1434,12 +1434,12 @@ function drawWolfBack(c, d, seed) {
   for (const [b1, b2, apex] of [[[96, 92], [124, 74], [90, 34]], [[134, 72], [162, 84], [168, 30]]]) {
     const mid = [(b1[0] + b2[0]) / 2, (b1[1] + b2[1]) / 2], A = lerp(mid, apex);
     const P = boil([b1, [(b1[0] + A[0]) / 2 - 2, (b1[1] + A[1]) / 2], A, [(b2[0] + A[0]) / 2 + 2, (b2[1] + A[1]) / 2], b2], seed + b1[0], 1);
-    closedPath(c, P, [2]); c.fillStyle = tint; c.fill(); inkStroke(c, 3.4);
+    closedPath(c, P, [2]); c.fillStyle = PUG ? PUGC.fawn : tint; c.fill(); inkStroke(c, 3.4);
     const I = [lerp(mid, [(b1[0] * 2 + apex[0]) / 3, (b1[1] * 2 + apex[1]) / 3]), lerp(mid, [(apex[0] * 3 + mid[0]) / 4, (apex[1] * 3 + mid[1]) / 4]), lerp(mid, [(b2[0] * 2 + apex[0]) / 3, (b2[1] * 2 + apex[1]) / 3])];
     c.beginPath(); I.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.closePath(); c.fillStyle = 'rgba(0,0,0,.3)'; c.fill();
   }
   const T = boil([[92,178],[70,180],[50,172],[36,156],[29,136],[32,114],[40,98],[50,90],[56,96],[52,110],[52,128],[58,144],[72,154],[92,156]].map(q => lerp([92, 166], q)), seed + 33, 1.4);
-  closedPath(c, T); c.fillStyle = tint; c.fill();
+  closedPath(c, T); c.fillStyle = PUG ? PUGC.fawn : tint; c.fill();
   c.save(); closedPath(c, T); c.clip(); c.fillStyle = 'rgba(255,241,220,.45)';             // pale tip of the tail
   const tip = lerp([92, 166], [44, 98]); c.beginPath(); c.arc(tip[0], tip[1], 16 * m, 0, Math.PI * 2); c.fill(); c.restore();
   closedPath(c, T); inkStroke(c, 3.4);
@@ -1458,7 +1458,7 @@ function drawWolfFront(c, d, seed) {
     const L2 = 40 * m, th = w.snout;
     c.save(); c.translate(128, 120); c.rotate(th);
     const S = boil([[0, -15], [L2 * 0.6, -12], [L2, -9], [L2 + 6, -3], [L2 + 6, 5], [L2, 11], [L2 * 0.6, 13], [0, 15]], seed + 9, 0.8);
-    closedPath(c, S); c.fillStyle = tint; c.fill(); c.fillStyle = 'rgba(255,241,220,.3)'; c.fill();     // paler muzzle
+    closedPath(c, S); c.fillStyle = PUG ? PUGC.fawn : tint; c.fill(); c.fillStyle = 'rgba(255,241,220,.3)'; c.fill();     // paler muzzle
     openPath(c, S); inkStroke(c, 3.2);
     c.fillStyle = '#0B0E14'; c.beginPath(); c.ellipse(L2 + 3, -4, 5.5, 4.2, 0, 0, Math.PI * 2); c.fill();
     if (w.open) { c.beginPath(); c.ellipse(L2 - 1, 8, 7 * w.open, 5 * w.open, 0, 0, Math.PI * 2); c.fill(); }
@@ -2131,8 +2131,170 @@ function drawFace(c, d, seed) {
 }
 function mixHex(a, b, k) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join(''); }
 
+/* ---------- the BBFYB pug (the style study is design/pug.html) ----------
+   Every drawing still comes from Lump's poses, so all moods, transitions and gags carry over:
+   his body outline becomes the pug's hoodie (the colour the firmware swaps at runtime), a pug head
+   goes where his face is, and his face marks are redrawn on the pug's dark mask.
+   The palette stays off the firmware's magenta + cream + black mix, so only the hoodie recolours. */
+const PUG = true;
+const PUGC = { fawn: '#D6AA7C', mask: '#2F2D29', tongue: '#F06E82', crease: '#C8566E', frame: '#3AB0E6', soot: '#3B342E' };
+const PUG_HEAD = [[84, 80], [104, 66], [128, 63], [152, 66], [172, 80], [182, 104], [178, 130], [162, 148], [128, 156], [94, 148], [78, 130], [74, 104]];
+const PUG_EAR = [[98, 71], [86, 66], [72, 70], [66, 82], [72, 88], [88, 82]];
+const PUG_MASK = [[104, 112], [118, 108], [128, 111], [138, 108], [152, 112], [162, 125], [158, 141], [144, 150], [128, 153], [112, 150], [98, 141], [94, 125]];
+const PUG_LENS = [[92, 96], [104, 91], [116, 93], [123, 99], [122, 111], [114, 120], [102, 121], [93, 115], [89, 105]];
+const PUG_FACE_AT = [128, 116];               // where Lump's face centre lands on the pug's head
+const LIT = '#FFF1DC';
+// mood props: shades on when he's done (the logo pose), pushed up on his head while he works
+if (PUG) {
+  for (const id of ['D1', 'D2', 'D3', 'P1']) if (D[id]) D[id].pugGlasses = 'on';
+  for (const id of ['W1', 'W2', 'W3', 'LH1', 'LH2', 'LH3', 'LHa', 'LHb', 'H1']) if (D[id]) D[id].pugGlasses = 'up';
+  for (const id of ['MOk', 'MW1', 'MW2']) if (D[id]) D[id].pugBum = true;     // mooning: seen from behind
+}
+const pugMirror = P => P.map(([x, y]) => [256 - x, y]);
+function markPts(mk) {
+  if (mk[0] === 'stroke' || mk[0] === 'mouth') return mk[1];
+  if (mk[0] === 'blush' || mk[0] === 'shine') return [];
+  return [[mk[1], mk[2]]];
+}
+// where and how big the head goes for a drawing: centred on his face, sized from his body
+function pugGeom(d) {
+  const pts = d.face.flatMap(markPts), bx = d.body.map(p => p[0]), by = d.body.map(p => p[1]);
+  const bw = Math.max(...bx) - Math.min(...bx), k = 0.86 * Math.max(0.72, Math.min(1.3, bw / 120));
+  let fx, fy, rot = 0;
+  if (pts.length) {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    fx = (Math.min(...xs) + Math.max(...xs)) / 2; fy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const [a, b] = d.face, eyeish = mk => mk && ['dot', 'oval', 'stroke', 'spiral'].includes(mk[0]);
+    if (eyeish(a) && eyeish(b)) {
+      const ca = markPts(a), cb = markPts(b), mid = P => P.reduce((s, q) => [s[0] + q[0] / P.length, s[1] + q[1] / P.length], [0, 0]);
+      let [p, q] = [mid(ca), mid(cb)]; if (q[0] < p[0]) [p, q] = [q, p];
+      const r = Math.atan2(q[1] - p[1], q[0] - p[0]); if (Math.abs(r) < 0.6) rot = r;
+    }
+  } else { fx = d.curl[0][0]; fy = d.curl[0][1] + 40 * k; }      // seen from behind: hang the head off his cowlick
+  fy = Math.min(fy, 203 - 40 * k);                               // chin never below the floor
+  return { fx, fy, k, rot, back: !pts.length };
+}
+function pugShape(c, P, fill, seed, lw, amt = 2) {
+  closedPath(c, boil(P, seed, amt)); if (fill) { c.fillStyle = fill; c.fill(); }
+  if (lw) { c.strokeStyle = ink(); c.lineWidth = lw; c.lineJoin = 'round'; c.stroke(); }
+}
+function pugLine(c, P, col, lw, seed, amt = 1) { openPath(c, boil(P, seed, amt)); c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke(); }
+function pugGlasses(c, seed, k) {
+  const W = 1 / k;
+  const blue = (P, w, sd) => { pugLine(c, P, ink(), (w + 3) * W, sd); pugLine(c, P, PUGC.frame, w * W, sd); };   // ink edge: blue never touches the hoodie
+  blue([[91, 100], [78, 94]], 3.4, seed + 40); blue([[165, 100], [178, 94]], 3.4, seed + 41);
+  blue([[122, 100], [128, 97], [134, 100]], 3.6, seed + 44);
+  for (const [P, s] of [[PUG_LENS, 0], [pugMirror(PUG_LENS), 1]]) {
+    const B = boil(P, seed + 42 + s, 0.6);
+    closedPath(c, B); c.strokeStyle = ink(); c.lineWidth = 7.2 * W; c.stroke(); c.fillStyle = '#000'; c.fill(); c.strokeStyle = PUGC.frame; c.lineWidth = 4.2 * W; c.stroke();
+  }
+  for (const dx of [0, 34]) { pugLine(c, [[98 + dx, 114], [110 + dx, 98]], LIT, 2.6 * W, seed + 45 + dx); pugLine(c, [[106 + dx, 116], [113 + dx, 107]], LIT, 1.8 * W, seed + 46 + dx); }
+}
+// mooning: hoodie hiked up, a fawn pug bottom and a curly tail (placed on Lump's crack line)
+function drawPugBum(c, d, seed) {
+  const crack = d.face[0][1], [a, b] = [crack[0], crack[crack.length - 1]], cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2;
+  const rot = Math.atan2(b[0] - a[0], a[1] - b[1]);
+  const K = 1.55; c.save(); c.translate(cx, cy - 4); c.rotate(rot); c.scale(K, K);
+  for (const sx of [-1, 1]) { closedPath(c, boil([[0, -14], [sx * 16, -16], [sx * 28, -6], [sx * 30, 8], [sx * 20, 18], [0, 16]].map(([x, y]) => [x, y]), seed + 60 + sx, 1.2)); c.fillStyle = PUGC.fawn; c.fill(); c.strokeStyle = ink(); c.lineWidth = 3 / K; c.stroke(); }
+  openPath(c, boil([[0, 14], [-1, 4], [0, -8]], seed + 63, 0.8)); c.strokeStyle = ink(); c.lineWidth = 2.6 / K; c.stroke();
+  for (const sx of [-1, 1]) { c.fillStyle = 'rgba(242,135,155,.45)'; c.beginPath(); c.ellipse(sx * 16, 6, 8, 5, 0, 0, Math.PI * 2); c.fill(); }
+  openPath(c, boil([[0, -16], [6, -26], [16, -30], [20, -22], [12, -18]], seed + 64, 1)); c.strokeStyle = ink(); c.lineWidth = 8 / K; c.lineCap = 'round'; c.stroke(); c.strokeStyle = PUGC.fawn; c.lineWidth = 4.4 / K; c.stroke();
+  c.restore();
+}
+// the hoodie's drawstrings hang from under his chin, clipped to the hoodie
+function drawPugStrings(c, d, seed, g) {
+  if (g.back || d.soot || d.inverse) return;
+  c.save(); closedPath(c, d.body, d.corners); c.clip();
+  c.translate(g.fx, g.fy); c.rotate(g.rot); c.scale(g.k, g.k); c.translate(-PUG_FACE_AT[0], -PUG_FACE_AT[1]);
+  for (const [a, b] of [[[118, 150], [115, 176]], [[138, 150], [141, 176]]]) {
+    pugLine(c, [a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 1], b], LIT, 2.6 / g.k, seed + 90 + a[0]);
+    c.fillStyle = LIT; c.beginPath(); c.arc(b[0], b[1] + 2, 2.6 / g.k, 0, Math.PI * 2); c.fill();
+  }
+  c.restore();
+}
+// the head, in its own coordinates (the style study's), then placed by pugGeom
+function drawPugHead(c, d, seed, g) {
+  const W = 1 / g.k, fur = d.soot ? PUGC.soot : d.inverse ? '#000' : PUGC.fawn, mask = d.soot ? '#1C1916' : PUGC.mask;
+  c.save(); c.translate(g.fx, g.fy); c.rotate(g.rot); c.scale(g.k, g.k); c.translate(-PUG_FACE_AT[0], -PUG_FACE_AT[1]);
+  const ear = (flip) => {
+    c.save(); if (flip) { c.translate(256, 0); c.scale(-1, 1); }
+    c.translate(94, 74); c.rotate(d.ear || 0); c.translate(-94, -74);
+    pugShape(c, PUG_EAR, mask, seed + 20 + flip, 3 * W, 1.2);
+    c.restore();
+  };
+  pugShape(c, PUG_HEAD, fur, seed + 12, 3.6 * W, 1.6);
+  ear(0); ear(1);
+  const wr = mixHex(PUGC.fawn, PUGC.mask, 0.55);
+  if (!d.soot && !d.inverse) {
+    pugLine(c, [[113, 79], [121, 76], [128, 79], [135, 76], [143, 79]], wr, 2.2 * W, seed + 23);
+    pugLine(c, [[118, 86], [128, 83], [138, 86]], wr, 2 * W, seed + 24);
+  }
+  if (!g.back) {
+    c.fillStyle = mask;
+    closedPath(c, boil(PUG_MASK, seed + 25, 1.4)); c.fill();
+    if (d.pugGlasses === 'up') { c.save(); c.translate(128, 72); c.scale(0.72, 0.62); c.translate(-128, -104); pugGlasses(c, seed, g.k * 0.67); c.restore(); }
+  }
+  c.restore();
+}
+// Lump's face marks, spread over the mask: dark with a cream edge, so they read on the mask and on fur
+function drawPugFace(c, d, seed, g) {
+  const m = 1.5 * g.k, T = ([x, y]) => [g.fx + (x - g.fx) * m, g.fy + (y - g.fy) * m], sm = Math.sqrt(m), DK = '#0B0E14';
+  if (d.pugGlasses === 'on') {                   // the logo's shades cover the eyes: draw them, keep only the mouth marks
+    c.save(); c.translate(g.fx, g.fy); c.rotate(g.rot); c.scale(g.k, g.k); c.translate(-PUG_FACE_AT[0], -PUG_FACE_AT[1]); pugGlasses(c, seed, g.k); c.restore();
+  }
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  d.face.forEach((mk, n) => {
+    if (d.pugGlasses === 'on' && n < 2 && mk[0] !== 'mouth') return;
+    const j = (x, y, i) => [x + (hash(seed * 13 + n * 5 + i) - 0.5) * 0.9, y + (hash(seed * 17 + n * 3 + i) - 0.5) * 0.9];
+    if (mk[0] === 'dot' || mk[0] === 'oval') {
+      const [x, y] = T(j(mk[1], mk[2], 0)), rx = mk[3] * m * (mk[0] === 'dot' ? 1.15 : 1), ry = (mk[0] === 'dot' ? mk[3] * 1.15 : mk[4]) * m;
+      c.beginPath(); c.ellipse(x, y, rx, ry, mk[5] || 0, 0, Math.PI * 2); c.fillStyle = DK; c.fill(); c.strokeStyle = LIT; c.lineWidth = 1.8; c.stroke();
+      if (!d.face.some(q => q[0] === 'shine')) { c.fillStyle = LIT; c.beginPath(); c.arc(x + rx * 0.35, y - ry * 0.35, Math.max(1.4, rx * 0.3), 0, Math.PI * 2); c.fill(); }
+    }
+    if (mk[0] === 'stroke') {
+      const P = mk[1].map((p, i) => T(j(p[0], p[1], i)));
+      openPath(c, P); c.strokeStyle = DK; c.lineWidth = mk[2] * sm + 2.6; c.stroke();
+      openPath(c, P); c.strokeStyle = LIT; c.lineWidth = mk[2] * sm * 0.85; c.stroke();
+    }
+    if (mk[0] === 'mouth') {
+      const P = mk[1].map((p, i) => T(j(p[0], p[1], i)));
+      c.save(); closedPath(c, P); c.fillStyle = DK; c.fill(); c.clip();
+      const t = mk[2] ? [...T([mk[2][0], mk[2][1]]), mk[2][2] * m, mk[2][3] * m] : null;
+      if (t) { c.fillStyle = PUGC.tongue; c.beginPath(); c.ellipse(t[0], t[1] + 3, t[2], t[3], 0, 0, Math.PI * 2); c.fill(); }
+      c.restore(); closedPath(c, P); c.strokeStyle = LIT; c.lineWidth = 1.8; c.stroke();
+    }
+    if (mk[0] === 'shine') { const [x, y] = T([mk[1], mk[2]]); c.fillStyle = LIT; c.beginPath(); c.arc(x, y, mk[3] * m, 0, Math.PI * 2); c.fill(); }
+    if (mk[0] === 'blush') { const [x, y] = T([mk[1], mk[2]]); c.fillStyle = 'rgba(242,135,155,.45)'; c.beginPath(); c.ellipse(x, y, mk[3] * m, mk[4] * m, 0, 0, Math.PI * 2); c.fill(); }
+    if (mk[0] === 'lips') {
+      const [x, y] = T([mk[1], mk[2]]), rx = mk[3] * m, ry = mk[4] * m;
+      c.fillStyle = PUGC.tongue; c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fill(); c.strokeStyle = LIT; c.lineWidth = 2; c.stroke();
+      openPath(c, [[x - rx * 0.75, y + 0.5], [x, y + 1.5], [x + rx * 0.75, y + 0.5]]); c.strokeStyle = PUGC.crease; c.stroke();
+    }
+    if (mk[0] === 'teeth') {
+      const [x, y] = T([mk[1], mk[2]]), w = mk[3] * m, h = mk[4] * m;
+      c.save(); c.fillStyle = LIT; c.strokeStyle = DK; c.lineWidth = 2.2; c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, 4); c.fill(); c.stroke();
+      c.lineWidth = 1.6; c.beginPath(); c.moveTo(x - w / 2, y); c.lineTo(x + w / 2, y);
+      for (let i = 1; i < 5; i++) { const tx = x - w / 2 + w * i / 5; c.moveTo(tx, y - h / 2); c.lineTo(tx, y + h / 2); } c.stroke(); c.restore();
+    }
+    if (mk[0] === 'spiral') {
+      const [x, y] = T(j(mk[1], mk[2], 0)), r = mk[3] * m, a0 = seed * 0.9;
+      c.beginPath(); for (let a = 0; a <= Math.PI * 3.6; a += 0.25) { const rr = r * a / (Math.PI * 3.6), px = x + Math.cos(a + a0) * rr, py = y + Math.sin(a + a0) * rr; a ? c.lineTo(px, py) : c.moveTo(px, py); }
+      c.strokeStyle = LIT; c.lineWidth = 2.2; c.stroke();
+    }
+  });
+  if (d.pugTongue) {                             // the logo's tongue, lolling out under the mouth
+    const L = 8 + 16 * d.pugTongue, [x, y] = T([g.fx, g.fy + 10]);
+    c.save(); c.translate(x, y); c.rotate(g.rot); c.scale(g.k, g.k);
+    closedPath(c, [[-6, 0], [7, 0], [11, L * 0.65], [6, L], [-1, L * 0.92], [-5, L * 0.5]]); c.fillStyle = PUGC.tongue; c.fill(); c.strokeStyle = '#0B0E14'; c.lineWidth = 2.2 / g.k; c.stroke();
+    openPath(c, [[2, 3], [3, L * 0.7]]); c.strokeStyle = PUGC.crease; c.lineWidth = 1.8 / g.k; c.stroke();
+    c.restore();
+  }
+}
+
 function render(c, m, id, tick, opts = {}) {
-  const d = D[id], seed = opts.still ? 1 : (Math.floor(tick / 2) % 3) + idSeed(id);
+  // the pug's line shimmers more slowly than Lump's (every 6 ticks, 2 variants): his extra detail would
+  // otherwise overflow the 11.9 MB art partition (tools/export_frames.py reports the size)
+  const d = D[id], seed = opts.still ? 1 : (PUG ? Math.floor(tick / 6) % 2 : Math.floor(tick / 2) % 3) + idSeed(id);
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.fillStyle = lineMode === 'paper' ? '#F4EFE6' : '#000'; c.fillRect(0, 0, 240, 240);
   // shadow
@@ -2163,11 +2325,12 @@ function render(c, m, id, tick, opts = {}) {
       for (let j = 1; j <= 5; j++) { const t = j / 5, side = (j % 2 ? 1 : -1) * 5; P.push([hx + Math.cos(a) * len * t - Math.sin(a) * side, hy + Math.sin(a) * len * t + Math.cos(a) * side]); }
       c.beginPath(); P.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.lineWidth = 3; c.stroke();
     }
-  } else { openPath(c, boil(d.curl, seed + 20, 1.2)); inkStroke(c, 3.4); }
+  } else if (!PUG) { openPath(c, boil(d.curl, seed + 20, 1.2)); inkStroke(c, 3.4); }
   if (d.pleats) { c.lineWidth = 2.6; d.pleats.forEach((P, k) => { openPath(c, boil(P, seed + 60 + k, 1)); c.stroke(); }); }
   if (d.blanket !== undefined) drawBlanket(c, d, seed);
   if (d.blanketFly) drawBlanketFly(c, d, seed);
-  drawFace(c, d, seed);
+  if (PUG && d.pugBum) drawPugBum(c, d, seed);
+  else if (PUG) { const g = pugGeom(d); drawPugStrings(c, d, seed, g); drawPugHead(c, d, seed, g); drawPugFace(c, d, seed, g); } else drawFace(c, d, seed);
   drawFrontProps(c, d, seed, tick);
   if (!opts.noFX) drawFX(c, m, d, tick, seed);
   if (d.boom) drawBoom(c, d, seed);
@@ -2359,6 +2522,19 @@ window.__lump = {
 };
 
 buildSheets();
+// Contact sheet for reviewing drawings: #sheet (all), #sheet=S1,W1 (some), #sheet=gag:wolf (one gag's drawings)
+if (location.hash.startsWith('#sheet')) {
+  const arg = decodeURIComponent(location.hash.slice(7));
+  let ids = arg.startsWith('gag:') ? [...new Set(TAP_REACT[arg.slice(4)].map(([id]) => id))] : arg ? arg.split(',') : Object.keys(D);
+  document.body.innerHTML = '<div id="sheet" style="display:grid;grid-template-columns:repeat(auto-fill,180px);gap:6px;padding:8px;background:#090C12"></div>';
+  const host = document.getElementById('sheet');
+  ids.filter(id => D[id] && D[id].body).forEach(id => {
+    const fig = document.createElement('figure'); fig.style.cssText = 'margin:0;color:#8C97AB;font:11px monospace';
+    const cv = document.createElement('canvas'); cv.width = cv.height = 240; cv.style.cssText = 'width:180px;height:180px;display:block';
+    fig.append(cv, id); host.append(fig);
+    try { render(cv.getContext('2d'), fxFor(id), id, 0, { still: true, dim: false }); } catch (e) { fig.append(' ERR ' + e.message); }
+  });
+}
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let globalTick = 0;
 function loop(now) {
